@@ -80,7 +80,6 @@ fn gaussian_distribution(x: f64, x0: f64, sigma: f64, momentum: f64) -> Complex6
     split_operator::wave_function::gaussian_distribution(x, x0, sigma, momentum)
 }
 
-
 #[pyclass(name = "TimeGrid")]
 struct TimeGridPy(TimeGrid); 
 
@@ -90,6 +89,18 @@ impl TimeGridPy {
     #[pyo3(signature = (step, step_no, im_time = false))]
     fn init(step: f64, step_no: usize, im_time: bool) -> Self {
         TimeGridPy(TimeGrid { step, step_no, im_time })
+    }
+
+    fn step(&self) -> f64 {
+        self.0.step
+    }
+
+    fn step_no(&self) -> usize {
+        self.0.step_no
+    }
+
+    fn im_time(&self) -> bool {
+        self.0.im_time
     }
 }
 
@@ -140,10 +151,10 @@ fn split_op(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     m.add_function(wrap_pyfunction!(one_dim_into_propagator, m)?)?;
     m.add_function(wrap_pyfunction!(n_dim_into_propagator, m)?)?;
+    m.add_function(wrap_pyfunction!(complex_n_dim_into_propagator, m)?)?;
     m.add_function(wrap_pyfunction!(kinetic_hamiltonian, m)?)?;
     m.add_function(wrap_pyfunction!(rotational_hamiltonian, m)?)?;
     m.add_function(wrap_pyfunction!(legendre_transformation, m)?)?;
-
 
     m.add_class::<OperationStackPy>()?;
 

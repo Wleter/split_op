@@ -61,6 +61,21 @@ class TimeGrid:
     """
     def __init__(self, step: float, step_no: float, im_time: bool = False) -> None: ...
 
+    """
+    Get the step value.
+    """
+    def step(self) -> float: ...
+
+    """
+    Get the step number.
+    """
+    def step_no(self) -> int: ...
+
+    """
+    Get whether it is imaginary time.
+    """
+    def im_time(self) -> bool: ...
+
 class Grid:
     @staticmethod
     def linear_continous(name: str, start: float, end: float, nodes_no: int, dim_nr: int) -> Grid:
@@ -215,6 +230,14 @@ def one_dim_into_propagator(hamiltonian: Iterable[float], grid: Grid, time: Time
 def n_dim_into_propagator(shape: Iterable[int], hamiltonian: Iterable[float], time: TimeGrid, step: str = "half") -> NDimPropagator:
     """
     Creates N dimensional propagator from the :hamiltonian: with :shape:, given :TimeGrid: :time: and the :step:
+    Resulting operator is exp(-i H dt), where dt depends on :time: and :step: 
+
+    :step: can be either "full" or "half"
+    """
+
+def complex_n_dim_into_propagator(shape: Iterable[int], hamiltonian: Iterable[complex], time: TimeGrid, step: str = "half") -> NDimPropagator:
+    """
+    Creates N dimensional propagator from the complex :hamiltonian: with :shape:, given :TimeGrid: :time: and the :step:
     Resulting operator is exp(-i H dt), where dt depends on :time: and :step: 
 
     :step: can be either "full" or "half"

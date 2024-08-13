@@ -155,6 +155,19 @@ pub fn n_dim_into_propagator(shape: Vec<usize>, hamiltonian: Vec<f64>, time: PyR
     NDimPropagatorPy(propagator_factory::n_dim_into_propagator(hamiltonian, &time.0, step))
 }
 
+#[pyfunction(signature = (shape, hamiltonian, time, step="half"))]
+pub fn complex_n_dim_into_propagator(shape: Vec<usize>, hamiltonian: Vec<Complex64>, time: PyRef<TimeGridPy>, step: &str) -> NDimPropagatorPy {
+    let hamiltonian = ArrayD::from_shape_vec(shape, hamiltonian).unwrap();
+
+    let step = match step {
+        "full" => TimeStep::Full,
+        "half" => TimeStep::Half,
+        _ => panic!("wrong time step {step}")
+    };
+
+    NDimPropagatorPy(propagator_factory::complex_n_dim_into_propagator(hamiltonian, &time.0, step))
+}
+
 #[pyfunction]
 pub fn kinetic_hamiltonian(grid: PyRef<GridPy>, mass: f64, energy: f64) -> Vec<f64> {
     let particle = Particle::new("emulate", Mass(2.0 * mass, Dalton));
