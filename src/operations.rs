@@ -2,7 +2,7 @@ use ndarray::{Array1, Array2, ArrayD};
 use num::complex::Complex64;
 use pyo3::prelude::*;
 use quantum::{particle::Particle, particles::Particles, units::{energy_units::{Energy, Kelvin}, mass_units::{Dalton, Mass}}};
-use split_operator::{border_dumping::{dumping_end, BorderDumping}, control::Apply, hamiltonian_factory::kinetic_operator, leak_control::LeakControl, loss_checker::LossChecker, propagation::OperationStack, propagator::{fft_transformation::FFTTransformation, matrix_transformation::MatrixTransformation, n_dim_propagator::NDimPropagator, one_dim_propagator::OneDimPropagator, propagator_factory, transformation::Order}, time_grid::TimeStep, wave_function_saver::{StateSaver, WaveFunctionSaver}};
+use split_operator::{border_dumping::{dumping_end, BorderDumping}, control::Apply, hamiltonian_factory::{kinetic_operator, legendre_diagonalization::legendre_diagonalization_operator, rotational_operator}, leak_control::LeakControl, loss_checker::LossChecker, propagation::OperationStack, propagator::{fft_transformation::FFTTransformation, matrix_transformation::MatrixTransformation, n_dim_propagator::NDimPropagator, one_dim_propagator::OneDimPropagator, propagator_factory, transformation::Order}, time_grid::TimeStep, wave_function_saver::{StateSaver, WaveFunctionSaver}};
 
 use crate::{GridPy, TimeGridPy};
 
@@ -61,6 +61,10 @@ impl MatrixTransformationPy {
         };
 
         operation_stack.0.add_transformation(Box::new(self.0.clone()), order);
+    }
+
+    fn transformed_grid(&self) -> GridPy {
+        GridPy(self.0.grid_transformation.clone())
     }
 }
 
@@ -154,10 +158,24 @@ pub fn n_dim_into_propagator(shape: Vec<usize>, hamiltonian: Vec<f64>, time: PyR
 #[pyfunction]
 pub fn kinetic_hamiltonian(grid: PyRef<GridPy>, mass: f64, energy: f64) -> Vec<f64> {
     let particle = Particle::new("emulate", Mass(2.0 * mass, Dalton));
-
     let particles = Particles::new_pair(particle.clone(), particle, Energy(energy, Kelvin));
 
     kinetic_operator::kinetic_hamiltonian(&grid.0, &particles).to_vec()
+}
+
+#[pyfunction]
+pub fn legendre_transformation(grid: PyRef<GridPy>) -> MatrixTransformationPy {
+    MatrixTransformationPy(legendre_diagonalization_operator(&grid.0), grid.0.nodes_no)
+}
+
+#[pyfunction]
+pub fn rotational_hamiltonian(radial_grid: PyRef<GridPy>, polar_grid: PyRef<GridPy>, mass: f64, rot_const: f64) -> (Vec<usize>, Vec<f64>) {
+    let particle = Particle::new("emulate", Mass(2.0 * mass, Dalton));
+    let particles = Particles::new_pair(particle.clone(), particle, Energy(0.0, Kelvin));
+
+    let array = rotational_operator::rotational_hamiltonian(&radial_grid.0, &polar_grid.0, &particles, rot_const);
+
+    (array.shape().to_vec(), array.into_raw_vec())
 }
 
 #[pyclass(name = "LossChecker")]

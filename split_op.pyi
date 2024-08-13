@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterable, Tuple
 
 class Propagation:
     """
@@ -147,6 +147,11 @@ class MatrixTransformation:
         Add operation to the :operation-stack:, :inverse_second: specifies the order of transformations.
         """
 
+    def transformed_grid(self) -> Grid:
+        """
+        Returns the resulting grid after the transformation. 
+        """
+
 class OneDimPropagator:
     """
     Creates one dimensional propagator with given :shape: and the dimension number :dimenion_nr: on which it acts.
@@ -220,6 +225,17 @@ def kinetic_hamiltonian(grid: Grid, mass: float, energy: float) -> list[float]:
     Creates kinetic hamiltonian on the :grid:, with :mass: in u units, with :energy: in Kelvin units.
     This form is created on transformed grid using :FFTTranformation:, that have to be applied before this operation.
     The form of the operator is $k^2/2m$
+    """
+
+def legendre_transformation(grid: Grid) -> MatrixTransformation:
+    """
+    Creates legendre transformation given the grid.
+    """
+
+def rotational_hamiltonian(radial_grid: Grid, polar_grid: Grid, mass: float, rot_const: float) -> Tuple[list[int], list[float]]:
+    """
+    Creates rotational Hamiltonian given radial_grid, polar_grid, mass and rotational constant.
+    Returns the shape and the data of the Hamiltonian matrix.
     """
 
 class LossChecker:

@@ -141,6 +141,9 @@ fn split_op(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(one_dim_into_propagator, m)?)?;
     m.add_function(wrap_pyfunction!(n_dim_into_propagator, m)?)?;
     m.add_function(wrap_pyfunction!(kinetic_hamiltonian, m)?)?;
+    m.add_function(wrap_pyfunction!(rotational_hamiltonian, m)?)?;
+    m.add_function(wrap_pyfunction!(legendre_transformation, m)?)?;
+
 
     m.add_class::<OperationStackPy>()?;
 
