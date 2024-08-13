@@ -62,40 +62,40 @@ class TimeGrid:
     def __init__(self, step: float, step_no: float, im_time: bool = False) -> None: ...
 
 class Grid:
-    """
-    Creates linear continuos grid with
-
-    :name: specified name
-    :start: starting point
-    :end: end point
-    :nodes_no: number of points
-    :dim_nr: number of the dimension, which specifies order in all grids
-    """
     @staticmethod
-    def linear_continous(name: str, start: float, end: float, nodes_no: int, dim_nr: int) -> 'Grid': ...
+    def linear_continous(name: str, start: float, end: float, nodes_no: int, dim_nr: int) -> Grid:
+        """
+        Creates linear continuos grid with
 
-    """
-    Creates linear countable grid with
+        :name: specified name
+        :start: starting point
+        :end: end point
+        :nodes_no: number of points
+        :dim_nr: number of the dimension, which specifies order in all grids
+        """
 
-    :name: specified name
-    :start: starting point
-    :end: end point
-    :nodes_no: number of points
-    :dim_nr: number of the dimension, which specifies order in all grids
-    """
     @staticmethod
-    def linear_countable(name: str, start: float, end: float, nodes_no: int, dim_nr: int) -> 'Grid': ...
+    def linear_countable(name: str, start: float, end: float, nodes_no: int, dim_nr: int) -> Grid:
+        """
+        Creates linear countable grid with
 
-    """
-    Creates custom grid with
+        :name: specified name
+        :start: starting point
+        :end: end point
+        :nodes_no: number of points
+        :dim_nr: number of the dimension, which specifies order in all grids
+        """
 
-    :name: specified name
-    :nodes: points of the grid
-    :weights: weight of the grid for integration
-    :dim_nr: number of the dimension, which specifies order in all grids
-    """
     @staticmethod
-    def custom(name: str, nodes: Iterable[float], weights: Iterable[float], dim_nr: int) -> 'Grid': ...
+    def custom(name: str, nodes: Iterable[float], weights: Iterable[float], dim_nr: int) -> Grid:
+        """
+        Creates custom grid with
+
+        :name: specified name
+        :nodes: points of the grid
+        :weights: weight of the grid for integration
+        :dim_nr: number of the dimension, which specifies order in all grids
+        """
 
     def points(self) -> list[float]:
         """
