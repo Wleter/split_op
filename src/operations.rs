@@ -2,7 +2,7 @@ use ndarray::{Array1, Array2, ArrayD};
 use num::complex::Complex64;
 use pyo3::prelude::*;
 use quantum::{particle::Particle, particles::Particles, units::{energy_units::{Energy, Kelvin}, mass_units::{Dalton, Mass}}};
-use split_operator::{control::Apply, hamiltonian_factory::kinetic_operator, leak_control::LeakControl, loss_checker::LossChecker, propagation::OperationStack, propagator::{fft_transformation::FFTTransformation, matrix_transformation::MatrixTransformation, n_dim_propagator::NDimPropagator, one_dim_propagator::OneDimPropagator, propagator_factory, transformation::Order}, time_grid::TimeStep, wave_function_saver::{StateSaver, WaveFunctionSaver}};
+use split_operator::{border_dumping::{dumping_end, BorderDumping}, control::Apply, hamiltonian_factory::kinetic_operator, leak_control::LeakControl, loss_checker::LossChecker, propagation::OperationStack, propagator::{fft_transformation::FFTTransformation, matrix_transformation::MatrixTransformation, n_dim_propagator::NDimPropagator, one_dim_propagator::OneDimPropagator, propagator_factory, transformation::Order}, time_grid::TimeStep, wave_function_saver::{StateSaver, WaveFunctionSaver}};
 
 use crate::{GridPy, TimeGridPy};
 
@@ -221,5 +221,24 @@ impl StateSaverPy {
 
     pub(crate) fn add_operation(&mut self, mut operation_stack: PyRefMut<OperationStackPy>) {
         operation_stack.0.add_saver(Box::new(self.0.clone()), Apply::FirstHalf);
+    }
+}
+
+#[pyclass(name = "BorderDumping")]
+pub struct BorderDumpingPy(pub BorderDumping);
+
+#[pymethods]
+impl BorderDumpingPy {
+    #[new]
+    pub(crate) fn new(mask_width: f64, mask_end: f64, grid: PyRef<GridPy>) -> Self {
+        BorderDumpingPy(BorderDumping::new(dumping_end(mask_width, mask_end, &grid.0), &grid.0))
+    }
+
+    pub(crate) fn set_loss_checked(&mut self, loss_checked: PyRef<LossCheckerPy>) {
+        self.0.add_loss_checker(loss_checked.0.clone());
+    }
+
+    pub(crate) fn add_operation(&mut self, mut operation_stack: PyRefMut<OperationStackPy>) {
+        operation_stack.0.add_control(Box::new(self.0.clone()), Apply::FirstHalf);
     }
 }

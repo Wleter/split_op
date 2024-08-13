@@ -28,6 +28,11 @@ class Propagation:
         Propagates the initial wave function in time specified with :TimeGrid: using operations in :OperationStack: 
         """    
 
+    def get_losses(self) -> list[float]:
+        """
+        Get losses in the appending chronological order and saves losses with LossSaver
+        """
+
     def save_savers(self) -> None:
         """
         Save data accquired by savers during propagation
@@ -271,6 +276,24 @@ class StateSaver:
     :frames_no: number of frames to take during propagation
     """
     def __init__(self, path: str, name: str, time_grid: TimeGrid, grid: Grid, frames_no: int) -> None: ...
+
+    def add_operation(self, operation_stack: OperationStack) -> None:
+        """
+        Add operation to the :operation-stack:.
+        """
+
+class BorderDumping:
+    """
+    Creates border dumping that erase wave function that is on the border.
+    Erasing start linearly from mask_width + mask_end from the border and from mask_end it fully vanishes wave function that is there.
+
+    """
+    def __init__(self, mask_width: float, mask_end: float, grid: Grid) -> None: ...
+
+    def set_loss_checked(self, loss_checked: LossChecker) -> None:
+        """
+        Set the loss checker that monitor changes done by this border dumping.
+        """
 
     def add_operation(self, operation_stack: OperationStack) -> None:
         """

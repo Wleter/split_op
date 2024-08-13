@@ -37,6 +37,8 @@ impl PropagationPy {
     }
 
     pub fn get_losses(&mut self) -> Vec<f64> {
+        self.0.print_losses();
+        
         self.0.get_losses()
     }
 
@@ -151,6 +153,8 @@ fn split_op(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<LeakControlPy>()?;
     m.add_class::<WaveFunctionSaverPy>()?;
     m.add_class::<StateSaverPy>()?;
+    m.add_class::<BorderDumpingPy>()?;
+
     Ok(())
 }
 
