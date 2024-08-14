@@ -78,7 +78,7 @@ class TimeGrid:
 
 class Grid:
     @staticmethod
-    def linear_continous(name: str, start: float, end: float, nodes_no: int, dim_nr: int) -> Grid:
+    def linear_continuos(name: str, start: float, end: float, nodes_no: int, dim_nr: int) -> Grid:
         """
         Creates linear continuos grid with
 
