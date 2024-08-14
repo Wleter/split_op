@@ -20,7 +20,7 @@ class Propagation:
     
     def set_operation_stack(self, operation_stack: OperationStack) -> None:
         """
-        Set the initial wave function for the propagation
+        Set the operation stack for the propagation
         """
     
     def propagate(self) -> None:
@@ -279,7 +279,7 @@ class LeakControl:
     """
     Creates Leak control with given :loss_checker: that monitors and corrects numerical losses.
     """
-    def __init__(self, grid: Grid, transformed_grid_name: str) -> None: ...
+    def __init__(self, loss_checker: LossChecker) -> None: ...
 
     def add_operation(self, operation_stack: OperationStack) -> None:
         """
