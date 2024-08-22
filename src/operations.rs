@@ -35,6 +35,10 @@ impl FFTTransformationPy {
 
         operation_stack.0.add_transformation(Box::new(self.0.clone()), order);
     }
+
+    pub(crate) fn transformed_grid(&self) -> GridPy {
+        GridPy(self.0.grid_transformation.clone())
+    }
 }
 
 #[pyclass(name = "MatrixTransformation")]
