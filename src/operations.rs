@@ -261,11 +261,11 @@ pub fn associated_legendre_transformations(grid: PyRef<GridPy>, omega_grid: PyRe
 }
 
 #[pyfunction]
-pub fn rotational_hamiltonian(radial_grid: PyRef<GridPy>, polar_grid: PyRef<GridPy>, mass: f64, rot_const: f64, omega: i64) -> (Vec<usize>, Vec<f64>) {
+pub fn rotational_hamiltonian(radial_grid: PyRef<GridPy>, polar_grid: PyRef<GridPy>, mass: f64, rot_const: f64) -> (Vec<usize>, Vec<f64>) {
     let particle = Particle::new("emulate", Mass(2.0 * mass, Dalton));
     let particles = Particles::new_pair(particle.clone(), particle, Energy(0.0, Kelvin));
 
-    let array = rotational_operator::rotational_hamiltonian(&radial_grid.0, &polar_grid.0, &particles, rot_const, omega);
+    let array = rotational_operator::rotational_hamiltonian(&radial_grid.0, &polar_grid.0, &particles, rot_const);
 
     (array.shape().to_vec(), array.into_raw_vec())
 }
