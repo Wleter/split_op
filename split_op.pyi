@@ -319,9 +319,9 @@ def associated_legendre_transformations(grid: Grid, omega_grid: Grid) -> StateMa
     Creates associated legendre transformations given the grid and the projection grids omega_grid.
     """
 
-def rotational_hamiltonian(radial_grid: Grid, polar_grid: Grid, mass: float, rot_const: float, omega: int) -> Tuple[list[int], list[float]]:
+def rotational_hamiltonian(radial_grid: Grid, polar_grid: Grid, mass: float, rot_const: float) -> Tuple[list[int], list[float]]:
     """
-    Creates rotational Hamiltonian given radial_grid, polar_grid, mass, rotational constant and omega.
+    Creates rotational Hamiltonian given radial_grid, polar_grid, mass, rotational constant.
     Returns the shape and the data of the Hamiltonian matrix.
     """
 
