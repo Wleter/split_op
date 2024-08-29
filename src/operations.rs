@@ -2,7 +2,7 @@ use ndarray::{Array1, Array2, ArrayD};
 use num::complex::Complex64;
 use pyo3::prelude::*;
 use quantum::{particle::Particle, particles::Particles, units::{energy_units::{Energy, Kelvin}, mass_units::{Dalton, Mass}}};
-use split_operator::{border_dumping::{dumping_end, BorderDumping}, control::Apply, hamiltonian_factory::{kinetic_operator, legendre_diagonalization::legendre_diagonalization_operator, rotational_operator}, leak_control::LeakControl, loss_checker::LossChecker, propagation::OperationStack, propagator::{fft_transformation::FFTTransformation, matrix_transformation::MatrixTransformation, n_dim_propagator::NDimPropagator, one_dim_propagator::OneDimPropagator, propagator_factory, transformation::Order}, time_grid::TimeStep, wave_function_saver::{StateSaver, WaveFunctionSaver}};
+use split_operator::{border_dumping::{dumping_end, BorderDumping}, control::Apply, hamiltonian_factory::{kinetic_operator, legendre_diagonalization::{associated_legendre_diagonalization_operator, associated_legendre_operator, legendre_diagonalization_operator}, rotational_operator}, leak_control::LeakControl, loss_checker::LossChecker, propagation::OperationStack, propagator::{fft_transformation::FFTTransformation, matrix_transformation::MatrixTransformation, n_dim_propagator::NDimPropagator, non_diagonal_propagator::NonDiagPropagator, one_dim_propagator::OneDimPropagator, propagator_factory, state_matrix_transformation::StateMatrixTransformation, transformation::Order}, time_grid::TimeStep, wave_function_saver::{StateSaver, WaveFunctionSaver}};
 
 use crate::{GridPy, TimeGridPy};
 
@@ -56,6 +56,42 @@ impl MatrixTransformationPy {
         let inverse = Array2::from_shape_vec([self.1, self.1], inverse).unwrap();
 
         self.0.set_diagonalization_matrix(transformation, inverse)
+    }
+
+    pub(crate) fn add_operation(&mut self, mut operation_stack: PyRefMut<OperationStackPy>, inverse_second: bool) {
+        let order = match inverse_second {
+            true => Order::Normal,
+            false => Order::InverseFirst,
+        };
+
+        operation_stack.0.add_transformation(Box::new(self.0.clone()), order);
+    }
+
+    fn transformed_grid(&self) -> GridPy {
+        GridPy(self.0.grid_transformation.clone())
+    }
+}
+
+#[pyclass(name = "StateMatrixTransformation")]
+pub struct StateMatrixTransformationPy(pub StateMatrixTransformation, usize);
+
+#[pymethods]
+impl StateMatrixTransformationPy {
+    #[new]
+    pub(crate) fn new(dimension_nr_dependent: usize, grid: PyRef<GridPy>, transformation_grid: PyRef<GridPy>) -> Self {
+        Self(StateMatrixTransformation::new(dimension_nr_dependent, &grid.0, transformation_grid.0.clone()), grid.0.nodes_no)
+    }
+
+    pub(crate) fn set_matrices(&mut self, transformations: Vec<Vec<Complex64>>, inverses: Vec<Vec<Complex64>>) {
+
+        let transformations = transformations.iter()
+            .map(|x| Array2::from_shape_vec([self.1, self.1], x.clone()).unwrap())
+            .collect();
+        let inverses = inverses.iter()
+            .map(|x| Array2::from_shape_vec([self.1, self.1], x.clone()).unwrap())
+            .collect();
+
+        self.0.set_diagonalization_matrices(transformations, inverses)
     }
 
     pub(crate) fn add_operation(&mut self, mut operation_stack: PyRefMut<OperationStackPy>, inverse_second: bool) {
@@ -133,6 +169,35 @@ impl NDimPropagatorPy {
     }
 }
 
+#[pyclass(name = "NonDiagPropagator")]
+pub struct NonDiagPropagatorPy(pub NonDiagPropagator);
+
+#[pymethods]
+impl NonDiagPropagatorPy {
+    #[new]
+    pub(crate) fn new(dimension_nr: usize) -> Self {
+        Self(NonDiagPropagator::new(dimension_nr))
+    }
+
+    pub(crate) fn set_operators(&mut self, dim_size: usize, operators: Vec<Vec<Complex64>>) {
+        let shape = [dim_size, dim_size];
+
+        let operators = operators.into_iter()
+            .map(|x| Array2::from_shape_vec(shape, x).unwrap())
+            .collect();
+
+        self.0.set_operators(operators)
+    }
+
+    pub(crate) fn set_loss_checked(&mut self, loss_checked: PyRef<LossCheckerPy>) {
+        self.0.set_loss_checked(loss_checked.0.clone());
+    }
+
+    pub(crate) fn add_operation(&mut self, mut operation_stack: PyRefMut<OperationStackPy>) {
+        operation_stack.0.add_propagator(Box::new(self.0.clone()));
+    }
+}
+
 #[pyfunction(signature = (hamiltonian, grid, time, step="half"))]
 pub fn one_dim_into_propagator(hamiltonian: Vec<f64>, grid: PyRef<GridPy>, time: PyRef<TimeGridPy>, step: &str) -> OneDimPropagatorPy {
     let hamiltonian = Array1::from_vec(hamiltonian);
@@ -186,11 +251,21 @@ pub fn legendre_transformation(grid: PyRef<GridPy>) -> MatrixTransformationPy {
 }
 
 #[pyfunction]
-pub fn rotational_hamiltonian(radial_grid: PyRef<GridPy>, polar_grid: PyRef<GridPy>, mass: f64, rot_const: f64) -> (Vec<usize>, Vec<f64>) {
+pub fn associated_legendre_transformation(grid: PyRef<GridPy>, omega: isize) -> MatrixTransformationPy {
+    MatrixTransformationPy(associated_legendre_diagonalization_operator(&grid.0, omega), grid.0.nodes_no)
+}
+
+#[pyfunction]
+pub fn associated_legendre_transformations(grid: PyRef<GridPy>, omega_grid: PyRef<GridPy>) -> StateMatrixTransformationPy {
+    StateMatrixTransformationPy(associated_legendre_operator(&grid.0, &omega_grid.0), grid.0.nodes_no)
+}
+
+#[pyfunction]
+pub fn rotational_hamiltonian(radial_grid: PyRef<GridPy>, polar_grid: PyRef<GridPy>, mass: f64, rot_const: f64, omega: i64) -> (Vec<usize>, Vec<f64>) {
     let particle = Particle::new("emulate", Mass(2.0 * mass, Dalton));
     let particles = Particles::new_pair(particle.clone(), particle, Energy(0.0, Kelvin));
 
-    let array = rotational_operator::rotational_hamiltonian(&radial_grid.0, &polar_grid.0, &particles, rot_const);
+    let array = rotational_operator::rotational_hamiltonian(&radial_grid.0, &polar_grid.0, &particles, rot_const, omega);
 
     (array.shape().to_vec(), array.into_raw_vec())
 }

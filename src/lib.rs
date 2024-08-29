@@ -45,6 +45,14 @@ impl PropagationPy {
     pub fn save_savers(&mut self) {
         self.0.savers_save()
     }
+
+    pub fn time_grid(&self) -> TimeGridPy {
+        TimeGridPy(self.0.time_grid().clone())
+    }
+
+    pub fn wave_function(&self) -> WaveFunctionPy {
+        WaveFunctionPy(self.0.wave_function().clone())
+    }
 }
 
 
@@ -155,13 +163,18 @@ fn split_op(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(kinetic_hamiltonian, m)?)?;
     m.add_function(wrap_pyfunction!(rotational_hamiltonian, m)?)?;
     m.add_function(wrap_pyfunction!(legendre_transformation, m)?)?;
+    m.add_function(wrap_pyfunction!(associated_legendre_transformation, m)?)?;
+    m.add_function(wrap_pyfunction!(associated_legendre_transformations, m)?)?;
 
     m.add_class::<OperationStackPy>()?;
 
     m.add_class::<FFTTransformationPy>()?;
     m.add_class::<MatrixTransformationPy>()?;
+    m.add_class::<StateMatrixTransformationPy>()?;
+
     m.add_class::<OneDimPropagatorPy>()?;
     m.add_class::<NDimPropagatorPy>()?;
+    m.add_class::<NonDiagPropagatorPy>()?;
 
     m.add_class::<LossCheckerPy>()?;
     m.add_class::<LeakControlPy>()?;
