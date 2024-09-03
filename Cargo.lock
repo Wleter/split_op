@@ -943,7 +943,7 @@ dependencies = [
 [[package]]
 name = "split_operator"
 version = "0.1.0"
-source = "git+https://github.com/Wleter/split_operator?branch=python-package#d15d2a9a71228ebfc402238d5c068beeaba146fa"
+source = "git+https://github.com/Wleter/split_operator?branch=python-package#b13074b820ff34c634457d95842f67c28aff3512"
 dependencies = [
  "criterion",
  "enum-flags",
