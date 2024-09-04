@@ -155,6 +155,11 @@ class FFTTransformation:
         Add operation to the operation-stack, inverse_second specifies the order of transformations.
         """
 
+    def transformed_grid(self) -> Grid:
+        """
+        Returns the resulting grid after the transformation. 
+        """
+
 class MatrixTransformation:
     """
     Creates Matrix transformation for given grid, which transform it to transformed_grid.
