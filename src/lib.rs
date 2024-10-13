@@ -188,6 +188,10 @@ fn split_op(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
 #[cfg(test)]
 mod tests {
+    use faer::{mat, prelude::c64, Mat};
+    use faer_ext::*;
+
+    use ndarray::arr2;
     use quantum::units::{energy_units::Kelvin, Unit};
     use split_operator::hamiltonian_factory::analytic_potentials::lennard_jones;
 
@@ -269,5 +273,33 @@ mod tests {
 
             println!("{:.2e}", propagation.0.wave_function().array);
         });
+    }
+
+    #[test]
+    fn test_exponent() {
+        let value = arr2(&[[Complex64::ONE, Complex64::I],
+                            [-Complex64::I, -Complex64::ONE]]);
+
+        let faer_view = value.view().into_faer_complex();
+        let eigen = faer_view.selfadjoint_eigendecomposition(faer::Side::Upper);
+
+        let exp: Vec<c64> = eigen.s().column_vector().iter()
+            .map(|x| x.exp())
+            .collect();
+
+        let exp = Mat::from_fn(exp.len(), exp.len(), |i, j| 
+            if i == j {
+                exp[i]
+            } else {
+                0.0.into()
+            }
+        );
+
+        let exp = eigen.u() * exp * eigen.u().adjoint();
+
+        let expected = mat![[c64::from(3.54648), 1.3683 * c64::i()],
+                            [-1.3683 * c64::i(), c64::from(0.809885)]];
+
+        assert!((exp - expected).norm_max() < 1e-5);
     }
 }

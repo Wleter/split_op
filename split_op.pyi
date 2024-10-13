@@ -278,6 +278,21 @@ class NonDiagPropagator:
         Add operation to the operation_stack.
         """
 
+    @staticmethod
+    def get_coriolis(
+        r_grid: Grid, 
+        j_grid: Grid, 
+        omega_grid: Grid,
+        mass_u: float,
+        j_tot: int,
+        time_grid: TimeGrid,
+        step: str,
+    ) -> NonDiagPropagator:
+        """
+        Creates coriolis non-diagonal propagator given grids and parameters. It works only for
+        problems with grids [r_grid, j_grid, omega_grid] and no additional grids.
+        """  
+
 def one_dim_into_propagator(hamiltonian: Iterable[float], grid: Grid, time: TimeGrid, step: str = "half") -> OneDimPropagator:
     """
     Creates 1 dimensional propagator from the hamiltonian acting on the grid given TimeGrid time and the step

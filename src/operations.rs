@@ -1,8 +1,12 @@
+use faer::{prelude::c64, Mat};
+use faer_ext::{IntoFaerComplex, IntoNdarrayComplex};
 use ndarray::{Array1, Array2, ArrayD};
 use num::complex::Complex64;
 use pyo3::prelude::*;
-use quantum::{particle::Particle, particles::Particles, units::{energy_units::{Energy, Kelvin}, mass_units::{Dalton, Mass}}};
-use split_operator::{border_dumping::{dumping_end, BorderDumping}, control::Apply, hamiltonian_factory::{kinetic_operator, legendre_diagonalization::{associated_legendre_diagonalization_operator, associated_legendre_operator, legendre_diagonalization_operator}, rotational_operator}, leak_control::LeakControl, loss_checker::LossChecker, propagation::OperationStack, propagator::{fft_transformation::FFTTransformation, matrix_transformation::MatrixTransformation, n_dim_propagator::NDimPropagator, non_diagonal_propagator::NonDiagPropagator, one_dim_propagator::OneDimPropagator, propagator_factory, state_matrix_transformation::StateMatrixTransformation, transformation::Order}, time_grid::TimeStep, wave_function_saver::{StateSaver, WaveFunctionSaver}};
+use quantum::{particle::Particle, particles::Particles, units::{energy_units::{Energy, Kelvin}, mass_units::{Dalton, Mass}, Unit}};
+use split_operator::{border_dumping::{dumping_end, BorderDumping}, control::Apply, hamiltonian_factory::{kinetic_operator, legendre_diagonalization::{associated_legendre_diagonalization_operator, associated_legendre_operator, legendre_diagonalization_operator}, rotational_operator}, leak_control::LeakControl, loss_checker::LossChecker, propagation::OperationStack, propagator::{fft_transformation::FFTTransformation, matrix_transformation::MatrixTransformation, n_dim_propagator::NDimPropagator, non_diagonal_propagator::NonDiagPropagator, one_dim_propagator::OneDimPropagator, propagator_factory, state_matrix_transformation::StateMatrixTransformation, transformation::Order}, time_grid::{select_step, TimeStep}, wave_function_saver::{StateSaver, WaveFunctionSaver}};
+
+use rayon::prelude::*;
 
 use crate::{GridPy, TimeGridPy};
 
@@ -138,7 +142,6 @@ impl OneDimPropagatorPy {
     }
 }
 
-
 #[pyclass(name = "NDimPropagator")]
 pub struct NDimPropagatorPy(pub NDimPropagator);
 
@@ -195,6 +198,97 @@ impl NonDiagPropagatorPy {
 
     pub(crate) fn add_operation(&mut self, mut operation_stack: PyRefMut<OperationStackPy>) {
         operation_stack.0.add_propagator(Box::new(self.0.clone()));
+    }
+
+    #[staticmethod]
+    pub(crate) fn get_coriolis(
+        r_grid: PyRef<GridPy>, 
+        j_grid: PyRef<GridPy>, 
+        omega_grid: PyRef<GridPy>,
+        mass_u: f64,
+        j_tot: usize,
+        time_grid: PyRef<TimeGridPy>,
+        step: &str,
+    ) -> Self {
+        // use only those grids don't use with any other grid
+        assert!(r_grid.0.dimension_no == 0);
+        assert!(j_grid.0.dimension_no == 1);
+        assert!(omega_grid.0.dimension_no == 2);
+
+        let step = match step {
+            "full" => TimeStep::Full,
+            "half" => TimeStep::Half,
+            _ => panic!("wrong time step {step}")
+        };
+        let time_step = select_step(step, &time_grid.0);
+
+        let omega_points = &omega_grid.0.nodes;
+        let omega_dim = omega_grid.0.nodes_no;
+        let j_points = &j_grid.0.nodes;
+        let r_points = &r_grid.0.nodes;
+
+        let coriolis_spatial: Vec<f64> = r_points.iter()
+            .map(|&r| - 1. / (2. * mass_u * Dalton::TO_AU_MUL * r * r))
+            .collect();
+
+        let c_matrices: Vec<Array2<Complex64>> = j_points.par_iter()
+            .map(|&j_value| Array2::from_shape_fn((omega_dim, omega_dim), |(i, j)| {
+                    unsafe {
+                        let k_left = *omega_points.get_unchecked(i);
+                        let k_right = *omega_points.get_unchecked(j);
+
+                        if k_left == k_right + 1. || k_right == k_left + 1. {
+                            if j_value * (j_value + 1.) < k_left * k_right {
+                                Complex64::ZERO
+                            } else {
+                                Complex64::from(f64::sqrt((j_value * (j_value + 1.0f64) - k_left * k_right) 
+                                    * ((j_tot * (j_tot + 1)) as f64 - k_left * k_right)))
+                            }
+                        } else {
+                            Complex64::ZERO
+                        }
+                    }
+                })
+            )
+            .collect();
+
+        let mut exponents = Vec::with_capacity(coriolis_spatial.len() * c_matrices.len());
+        for spatial in coriolis_spatial {
+            let exp: Vec<Array2<Complex64>> = c_matrices.par_iter()
+                .map(|c| {
+                    let factor: c64 = -c64::i() * spatial * c64::from(time_step);
+
+                    let faer_c = c.view().into_faer_complex();
+                    let eigen = faer_c.selfadjoint_eigendecomposition(faer::Side::Upper);
+
+                    let exp_diag = eigen.s()
+                        .column_vector()
+                        .iter()
+                        .map(|&x| (x * factor).exp())
+                        .collect::<Vec<c64>>();
+
+                    let exp_mat = Mat::from_fn(exp_diag.len(), exp_diag.len(), |i, j| {
+                        if i == j {
+                            unsafe {
+                                *exp_diag.get_unchecked(i)
+                            }
+                        } else {
+                            c64::from(0.)
+                        }
+                    });
+
+                    let values = eigen.u() * exp_mat * eigen.u().adjoint();
+
+                    values.as_ref().into_ndarray_complex().to_owned()
+                })
+                .collect();
+            exponents.extend(exp);
+        }
+
+        let mut non_diag = NonDiagPropagator::new(omega_grid.0.dimension_no);
+        non_diag.set_operators(exponents);
+
+        NonDiagPropagatorPy(non_diag)
     }
 }
 
@@ -267,7 +361,10 @@ pub fn rotational_hamiltonian(radial_grid: PyRef<GridPy>, polar_grid: PyRef<Grid
 
     let array = rotational_operator::rotational_hamiltonian(&radial_grid.0, &polar_grid.0, &particles, rot_const);
 
-    (array.shape().to_vec(), array.into_raw_vec())
+    let shape = array.shape().to_vec();
+    let (v, _) = array.into_raw_vec_and_offset();
+
+    (shape, v)
 }
 
 #[pyclass(name = "LossChecker")]
