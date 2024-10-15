@@ -238,7 +238,9 @@ impl NonDiagPropagatorPy {
                         let k_right = *omega_points.get_unchecked(j);
 
                         if k_left == k_right + 1. || k_right == k_left + 1. {
-                            if j_value * (j_value + 1.) < k_left * k_right {
+                            if j_value * (j_value + 1.) < k_left * k_right 
+                                || j_tot as f64 * (j_tot as f64 + 1.) < k_left * k_right
+                            {
                                 Complex64::ZERO
                             } else {
                                 Complex64::from(f64::sqrt((j_value * (j_value + 1.0f64) - k_left * k_right) 
