@@ -246,8 +246,7 @@ mod tests {
             let mut fft_transform = FFTTransformationPy::new(grid.borrow(), "momentum");
 
             let mut wave_function_saver = StateSaverPy::new(
-                "data/",
-                "lj_ground",
+                "data/lj_ground",
                 time_grid.borrow(),
                 grid.borrow(),
                 120,

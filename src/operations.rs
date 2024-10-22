@@ -409,8 +409,8 @@ pub struct WaveFunctionSaverPy(pub WaveFunctionSaver);
 #[pymethods]
 impl WaveFunctionSaverPy {
     #[new]
-    pub(crate) fn new(path: &str, name: &str, time_grid: PyRef<TimeGridPy>, x_grid: PyRef<GridPy>, y_grid: PyRef<GridPy>, frames_no: usize) -> Self {
-        WaveFunctionSaverPy(WaveFunctionSaver::new(path.to_string(), name.to_string(), &time_grid.0, &x_grid.0, &y_grid.0, frames_no))
+    pub(crate) fn new(name: &str, time_grid: PyRef<TimeGridPy>, x_grid: PyRef<GridPy>, y_grid: PyRef<GridPy>, frames_no: usize) -> Self {
+        WaveFunctionSaverPy(WaveFunctionSaver::new(name.to_string(), &time_grid.0, &x_grid.0, &y_grid.0, frames_no))
     }
 
     pub(crate) fn add_operation(&mut self, mut operation_stack: PyRefMut<OperationStackPy>) {
@@ -424,8 +424,8 @@ pub struct StateSaverPy(pub StateSaver);
 #[pymethods]
 impl StateSaverPy {
     #[new]
-    pub(crate) fn new(path: &str, name: &str, time_grid: PyRef<TimeGridPy>, state_grid: PyRef<GridPy>, frames_no: usize) -> Self {
-        StateSaverPy(StateSaver::new(path.to_string(), name.to_string(), &time_grid.0, &state_grid.0, frames_no))
+    pub(crate) fn new(name: &str, time_grid: PyRef<TimeGridPy>, state_grid: PyRef<GridPy>, frames_no: usize) -> Self {
+        StateSaverPy(StateSaver::new(name.to_string(), &time_grid.0, &state_grid.0, frames_no))
     }
 
     pub(crate) fn add_operation(&mut self, mut operation_stack: PyRefMut<OperationStackPy>) {
