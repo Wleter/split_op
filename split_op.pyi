@@ -374,14 +374,13 @@ class WaveFunctionSaver:
     """
     Creates wave function saver for 2d problems, that snapshot wave function probability density during propagation.
 
-    :path: path to save the wave function
     :name: name of the saved file
     :time_grid: used :TimeGrid:
     :x_grid: x grid to save
     :y_grid: y grid to save
     :frames_no: number of frames to take during propagation
     """
-    def __init__(self, path: str, name: str, time_grid: TimeGrid, x_grid: Grid, y_grid: Grid, frames_no: int) -> None: ...
+    def __init__(self, name: str, time_grid: TimeGrid, x_grid: Grid, y_grid: Grid, frames_no: int) -> None: ...
 
     def add_operation(self, operation_stack: OperationStack) -> None:
         """
@@ -392,13 +391,12 @@ class StateSaver:
     """
     Creates state saver, that snapshot the wave function probability density projected on specified Grid during propagation.
 
-    :path: path to save the wave function
     :name: name of the saved file
     :time_grid: used :TimeGrid:
     :x_grid: grid on which wave function is projected.
     :frames_no: number of frames to take during propagation
     """
-    def __init__(self, path: str, name: str, time_grid: TimeGrid, grid: Grid, frames_no: int) -> None: ...
+    def __init__(self, name: str, time_grid: TimeGrid, grid: Grid, frames_no: int) -> None: ...
 
     def add_operation(self, operation_stack: OperationStack) -> None:
         """
