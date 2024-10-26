@@ -53,6 +53,10 @@ impl PropagationPy {
     pub fn wave_function(&self) -> WaveFunctionPy {
         WaveFunctionPy(self.0.wave_function().clone())
     }
+
+    pub fn mean_energy(&mut self) -> f64 {
+        self.0.mean_energy()
+    }
 }
 
 

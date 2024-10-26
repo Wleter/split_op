@@ -48,6 +48,11 @@ class Propagation:
         Get current wave_function
         """
 
+    def mean_energy(self) -> float:
+        """
+        Get mean energy of the wave function at this time
+        """
+
 def gaussian_distribution(x: float, x0: float, sigma: float, momentum: float) -> complex:
     """
     Return gaussian distribution of the form exp(-(x-x0)^2/(2sigma)^2 - i momentum (x - x0)) 
