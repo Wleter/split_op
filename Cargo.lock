@@ -1156,7 +1156,7 @@ dependencies = [
 [[package]]
 name = "split_operator"
 version = "0.1.0"
-source = "git+https://github.com/Wleter/split_operator#49370fd069705d513f816c780875d4de6c475048"
+source = "git+https://github.com/Wleter/split_operator#09e893ccabfdb64d047db06159344e403daf1d60"
 dependencies = [
  "enum-flags",
  "ndarray",

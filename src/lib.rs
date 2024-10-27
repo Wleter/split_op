@@ -59,7 +59,6 @@ impl PropagationPy {
     }
 }
 
-
 #[pyclass(name = "WaveFunction")]
 struct WaveFunctionPy(WaveFunction);
 
