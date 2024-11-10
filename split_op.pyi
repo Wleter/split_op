@@ -74,7 +74,7 @@ class TimeGrid:
     :step_no: number of steps in the propagation
     :im_time: whether time is imaginary, default is False 
     """
-    def __init__(self, step: float, step_no: float, im_time: bool = False) -> None: ...
+    def __init__(self, step: float, step_no: int, im_time: bool = False) -> None: ...
 
     """
     Get the step value.
