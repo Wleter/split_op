@@ -322,7 +322,7 @@ def complex_n_dim_into_propagator(shape: Iterable[int], hamiltonian: Iterable[co
     :step: can be either "full" or "half"
     """
 
-def kinetic_hamiltonian(grid: Grid, mass: float, energy: float) -> list[float]:
+def kinetic_hamiltonian(grid: Grid, mass: float) -> list[float]:
     """
     Creates kinetic hamiltonian on the grid, with mass in u units, with energy in Kelvin units.
     This form is created on transformed grid using FFTTranformation, that have to be applied before this operation.

@@ -1,6 +1,7 @@
+use faer::MatRef;
 use faer::{prelude::c64, Mat};
 use faer_ext::{IntoFaer, IntoNdarray};
-use ndarray::{Array1, Array2, ArrayD};
+use faer_ext::ndarray::{Array1, Array2, ArrayD};
 use num::complex::Complex64;
 use pyo3::prelude::*;
 use cc_constants::units::*;
@@ -260,10 +261,10 @@ impl NonDiagPropagatorPy {
                 .map(|c| {
                     let factor: c64 = -c64::i() * spatial * c64::from(time_step);
 
-                    let faer_c = c.view().into_faer_complex();
-                    let eigen = faer_c.selfadjoint_eigendecomposition(faer::Side::Upper);
+                    let faer_c: MatRef<c64> = c.view().into_faer();
+                    let eigen = faer_c.self_adjoint_eigen(faer::Side::Upper).unwrap();
 
-                    let exp_diag = eigen.s()
+                    let exp_diag = eigen.S()
                         .column_vector()
                         .iter()
                         .map(|&x| (x * factor).exp())
@@ -279,9 +280,9 @@ impl NonDiagPropagatorPy {
                         }
                     });
 
-                    let values = eigen.u() * exp_mat * eigen.u().adjoint();
+                    let values = eigen.U() * exp_mat * eigen.U().adjoint();
 
-                    values.as_ref().into_ndarray_complex().to_owned()
+                    values.as_ref().into_ndarray().to_owned()
                 })
                 .collect();
             exponents.extend(exp);

@@ -191,19 +191,17 @@ fn split_op(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
 #[cfg(test)]
 mod tests {
-    use faer::{mat, prelude::c64, Mat};
-    use faer_ext::*;
+    use faer::{Mat, MatRef, mat, prelude::c64};
+    use faer_ext::IntoFaer;
 
     use cc_constants::units::*;
-    use ::ndarray::arr2;
+    use faer_ext::ndarray::arr2;
     use split_operator::hamiltonian_factory::analytic_potentials::lennard_jones;
 
     use crate::*;
 
     #[test]
     fn ground_state() {
-        pyo3::prepare_freethreaded_python();
-
         Python::attach(|py| {
             let mut propagation = PropagationPy::new();
 
@@ -282,10 +280,10 @@ mod tests {
         let value = arr2(&[[Complex64::ONE, Complex64::I],
                             [-Complex64::I, -Complex64::ONE]]);
 
-        let faer_view = value.view().into_faer_complex();
-        let eigen = faer_view.selfadjoint_eigendecomposition(faer::Side::Upper);
+        let faer_view: MatRef<c64> = value.view().into_faer();
+        let eigen = faer_view.self_adjoint_eigen(faer::Side::Upper).unwrap();
 
-        let exp: Vec<c64> = eigen.s().column_vector().iter()
+        let exp: Vec<c64> = eigen.S().column_vector().iter()
             .map(|x| x.exp())
             .collect();
 
@@ -297,7 +295,7 @@ mod tests {
             }
         );
 
-        let exp = eigen.u() * exp * eigen.u().adjoint();
+        let exp = eigen.U() * exp * eigen.U().adjoint();
 
         let expected = mat![[c64::from(3.54648), 1.3683 * c64::i()],
                             [-1.3683 * c64::i(), c64::from(0.809885)]];

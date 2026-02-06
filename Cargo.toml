@@ -11,10 +11,10 @@ crate-type = ["cdylib"]
 [dependencies]
 pyo3 = {version = "0.28", features = ["num-complex"]}
 pyo3-log = "*"
-ndarray = "0.17.2"
+ndarray = "0.16.1"
 num = "0.4.3"
 split_operator = { git = "https://github.com/Wleter/split_operator" }
 cc_constants = { git = "https://github.com/Wleter/coupled_chan_rs", branch = "dev" }
 rayon = "1.11.0"
-faer = "0.24"
+faer = "0.23.2"
 faer-ext = { version = "0.7.1", features = ["ndarray"] }
