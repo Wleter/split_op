@@ -194,8 +194,8 @@ mod tests {
     use faer::{mat, prelude::c64, Mat};
     use faer_ext::*;
 
-    use ndarray::arr2;
-    use quantum::units::{energy_units::Kelvin, Unit};
+    use cc_constants::units::*;
+    use ::ndarray::arr2;
     use split_operator::hamiltonian_factory::analytic_potentials::lennard_jones;
 
     use crate::*;
@@ -204,7 +204,7 @@ mod tests {
     fn ground_state() {
         pyo3::prepare_freethreaded_python();
 
-        Python::with_gil(|py| {
+        Python::attach(|py| {
             let mut propagation = PropagationPy::new();
 
             let x_start = 8.0;
@@ -215,7 +215,7 @@ mod tests {
 
             let energy = 1e-7;
             let mass = 6.0;
-            let momentum = (2.0f64 * mass * energy * Kelvin::TO_AU_MUL).sqrt();
+            let momentum = (2.0f64 * mass * energy * Kelvin::TO_BASE).sqrt();
 
             let mut wave_function_array = vec![Complex64::ZERO; x_no];
             for (i, x) in grid.borrow().points().iter().enumerate() {
@@ -239,7 +239,7 @@ mod tests {
                 "half"
             );
 
-            let kinetic_array = kinetic_hamiltonian(grid.borrow(), mass, energy);
+            let kinetic_array = kinetic_hamiltonian(grid.borrow(), mass);
             let mut kinetic_propagator = one_dim_into_propagator(
                 kinetic_array,
                 grid.borrow(),

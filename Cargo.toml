@@ -9,13 +9,12 @@ name = "split_op"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = {version = "0.22.4", features = ["num-complex"]}
-pyo3-log = "0.11.0"
-log = "0.4.22"
-ndarray = "0.16.1"
+pyo3 = {version = "0.28", features = ["num-complex"]}
+pyo3-log = "*"
+ndarray = "0.17.2"
 num = "0.4.3"
 split_operator = { git = "https://github.com/Wleter/split_operator" }
-quantum = { git = "https://github.com/Wleter/quantum" }
-rayon = "1.10.0"
-faer = "0.19.4"
-faer-ext = { version = "0.3.0", features = ["ndarray"] }
+cc_constants = { git = "https://github.com/Wleter/coupled_chan_rs", branch = "dev" }
+rayon = "1.11.0"
+faer = "0.24"
+faer-ext = { version = "0.7.1", features = ["ndarray"] }

@@ -1,9 +1,9 @@
 use faer::{prelude::c64, Mat};
-use faer_ext::{IntoFaerComplex, IntoNdarrayComplex};
+use faer_ext::{IntoFaer, IntoNdarray};
 use ndarray::{Array1, Array2, ArrayD};
 use num::complex::Complex64;
 use pyo3::prelude::*;
-use quantum::{particle::Particle, particles::Particles, units::{energy_units::{Energy, Kelvin}, mass_units::{Dalton, Mass}, Unit}};
+use cc_constants::units::*;
 use split_operator::{border_dumping::{dumping_end, BorderDumping}, control::Apply, hamiltonian_factory::{kinetic_operator, legendre_diagonalization::{associated_legendre_diagonalization_operator, associated_legendre_operator, legendre_diagonalization_operator}, rotational_operator}, leak_control::LeakControl, loss_checker::LossChecker, propagation::OperationStack, propagator::{fft_transformation::FFTTransformation, matrix_transformation::MatrixTransformation, n_dim_propagator::NDimPropagator, non_diagonal_propagator::NonDiagPropagator, one_dim_propagator::OneDimPropagator, propagator_factory, state_matrix_transformation::StateMatrixTransformation, transformation::Order}, time_grid::{select_step, TimeStep}, wave_function_saver::{StateSaver, WaveFunctionSaver}};
 
 use rayon::prelude::*;
@@ -228,7 +228,7 @@ impl NonDiagPropagatorPy {
         let r_points = &r_grid.0.nodes;
 
         let coriolis_spatial: Vec<f64> = r_points.iter()
-            .map(|&r| - 1. / (2. * mass_u * Dalton::TO_AU_MUL * r * r))
+            .map(|&r| - 1. / (2. * mass_u * Dalton::TO_BASE * r * r))
             .collect();
 
         let c_matrices: Vec<Array2<Complex64>> = j_points.par_iter()
@@ -334,11 +334,8 @@ pub fn complex_n_dim_into_propagator(shape: Vec<usize>, hamiltonian: Vec<Complex
 }
 
 #[pyfunction]
-pub fn kinetic_hamiltonian(grid: PyRef<GridPy>, mass: f64, energy: f64) -> Vec<f64> {
-    let particle = Particle::new("emulate", Mass(2.0 * mass, Dalton));
-    let particles = Particles::new_pair(particle.clone(), particle, Energy(energy, Kelvin));
-
-    kinetic_operator::kinetic_hamiltonian(&grid.0, &particles).to_vec()
+pub fn kinetic_hamiltonian(grid: PyRef<GridPy>, mass_u: f64) -> Vec<f64> {
+    kinetic_operator::kinetic_hamiltonian(&grid.0, mass_u * Dalton::TO_BASE).to_vec()
 }
 
 #[pyfunction]
@@ -357,11 +354,8 @@ pub fn associated_legendre_transformations(grid: PyRef<GridPy>, omega_grid: PyRe
 }
 
 #[pyfunction]
-pub fn rotational_hamiltonian(radial_grid: PyRef<GridPy>, polar_grid: PyRef<GridPy>, mass: f64, rot_const: f64) -> (Vec<usize>, Vec<f64>) {
-    let particle = Particle::new("emulate", Mass(2.0 * mass, Dalton));
-    let particles = Particles::new_pair(particle.clone(), particle, Energy(0.0, Kelvin));
-
-    let array = rotational_operator::rotational_hamiltonian(&radial_grid.0, &polar_grid.0, &particles, rot_const);
+pub fn rotational_hamiltonian(radial_grid: PyRef<GridPy>, polar_grid: PyRef<GridPy>, mass_u: f64, rot_const: f64) -> (Vec<usize>, Vec<f64>) {
+    let array = rotational_operator::rotational_hamiltonian(&radial_grid.0, &polar_grid.0, mass_u * Dalton::TO_BASE, rot_const);
 
     let shape = array.shape().to_vec();
     let (v, _) = array.into_raw_vec_and_offset();
