@@ -10,7 +10,6 @@ crate-type = ["cdylib"]
 
 [dependencies]
 pyo3 = {version = "0.28", features = ["num-complex"]}
-pyo3-log = "*"
 ndarray = "0.16.1"
 num = "0.4.3"
 split_operator = { git = "https://github.com/Wleter/split_operator" }

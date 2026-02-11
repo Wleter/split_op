@@ -151,8 +151,6 @@ impl GridPy {
 /// A Python module implemented in Rust.
 #[pymodule]
 fn split_op(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    pyo3_log::init();
-
     m.add_function(wrap_pyfunction!(gaussian_distribution, m)?)?;
 
     m.add_class::<GridPy>()?;
